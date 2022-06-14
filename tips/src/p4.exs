@@ -1,6 +1,6 @@
 defmodule P4 do
   @moduledoc """
-  Explore the lexer topic provide by elixir
+  A simple lexer example which handle version
   """
   def lexer(str) do
     parse(str, "", [])
@@ -10,16 +10,22 @@ defmodule P4 do
     [buffer | acc]
   end
 
-  def parse("=" <> rest, buffer, _) do
-    parse(rest, buffer, [:==])
+  for mark <- ~w(= > <) do
+    def parse(unquote(mark) <> rest, buffer, acc) do
+      parse(rest, buffer, [unquote(String.to_atom(mark)) | acc])
+    end
   end
 
-  def parse(">" <> rest, buffer, _) do
-    parse(rest, buffer, [:>])
-  end
+  # def parse("=" <> rest, buffer, _) do
+  #   parse(rest, buffer, [:=])
+  # end
 
-  def parse("<" <> rest, buffer, _) do
-    parse(rest, buffer, [:<])
+  # def parse(">" <> rest, buffer, _) do
+  #   parse(rest, buffer, [:>])
+  # end
+
+  def parse("and" <> rest, buffer, acc) do
+    parse(rest, "", [:and, buffer | acc])
   end
 
   def parse(<<" ", rest::binary>>, buffer, acc) do
@@ -32,7 +38,7 @@ defmodule P4 do
 
   defp renew(acc) do
     case acc do
-      [] -> [:==]
+      [] -> [:=]
       _ -> acc
     end
   end
@@ -44,12 +50,13 @@ defmodule Test do
   use ExUnit.Case, async: true
 
   test "lexer test" do
-    assert P4.lexer("=1.1.1") == ["1.1.1", :==]
-    assert P4.lexer("1.1.1") == ["1.1.1", :==]
-    assert P4.lexer(" 1.1.1") == ["1.1.1", :==]
-    assert P4.lexer("= 1.1.1") == ["1.1.1", :==]
-    assert P4.lexer(" = 1.1.1") == ["1.1.1", :==]
+    assert P4.lexer("=1.1.1") == ["1.1.1", :=]
+    assert P4.lexer("1.1.1") == ["1.1.1", :=]
+    assert P4.lexer(" 1.1.1") == ["1.1.1", :=]
+    assert P4.lexer("= 1.1.1") == ["1.1.1", :=]
+    assert P4.lexer(" = 1.1.1") == ["1.1.1", :=]
     assert P4.lexer(">1.1.1") == ["1.1.1", :>]
     assert P4.lexer("<1.1.1") == ["1.1.1", :<]
+    assert P4.lexer("<1.1.1 and >0.1") == ["0.1", :>, :and, "1.1.1", :<]
   end
 end
